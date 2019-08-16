@@ -1,0 +1,70 @@
+inputs:
+  hostname:
+    title: Hostname
+    type: string
+  sshkey:
+    type: string
+    title: SSHKey
+    encrypted: true
+  password:
+    type: string
+    encrypted: true
+    title: Password
+    default: VMware123!
+resources:
+  web1:
+    type: Cloud.Machine
+    metadata:
+      layoutPosition:
+        - 0
+        - 1
+    networks:
+      - name: '${resource.AppNetwork.name}'
+    properties:
+      image: Ubuntu 18.04 LTS
+      constraints:
+        - tag: 'category:development'
+      flavor: generic.tiny
+      cloudConfig: |
+        #cloud-config
+        users:
+          - name: 'ansibleoss'
+            ssh_authorized_keys:
+              - ${input.sshkey}
+            passwd: ${input.password}
+            sudo: ['ALL=(ALL) NOPASSWD:ALL']
+            groups: [wheel, sudo, admin]
+            shell: '/bin/bash'
+            lock_passwd:  false
+      hostname: '${input.hostname}'
+      networks:
+        - name: '${AppNetwork.name}'
+          network: '${resource.AppNetwork.id}'
+  AppNetwork:
+    type: Cloud.Network
+    metadata:
+      layoutPosition:
+        - 1
+        - 0
+    properties:
+      name: vDSVlan629
+      networkType: existing
+  Ansbile:
+    type: Cloud.Ansible
+    metadata:
+      layoutPosition:
+        - 0
+        - 0
+    properties:
+      inventoryFile: /etc/ansible/hosts
+      username: ansibleoss
+      playbooks:
+        provision:
+          - /home/ansibleoss/playbooks/cas-ansible-demo/playbook/nginx-playbook.yml
+      osType: linux
+      groups:
+        - GroupName
+      maxConnectionRetries: 10
+      host: '${resource.web1.*}'
+      account: dg-ansibleoss
+      privateKeyFile: /home/ansibleoss/ansible_keys/id_centos_cas_rsa
