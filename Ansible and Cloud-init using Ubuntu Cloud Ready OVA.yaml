@@ -30,13 +30,17 @@ resources:
           - default
           - name: 'ansibleoss'
             ssh_authorized_keys:
-              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFP8B+AzYQeZk/rwyuFDzyL3uTMrOiFrziO8PyvQV5NgIVSOjvhVNRGDTCf+WxvITy3lC6H7WmXU12y2zoChfCgQD0a9du5mkNVl3MXyaTycmQNbPqrSUWiMkxhNqVDeMeV7V4p2LYD2w5dypbc5fX0yD2B3X8141COeOdhDBA86DB173E6CfGv6KEv3vS7na3aI0qUvtKIo+d8OojfUi6ROHGIe55sDIfNywvNoa10pPMSZEh6Y1K9IUsSTctu65ejLW32/9se+Wru1LVHjCHsakDP6m4XACZRTB7GhHlKkTo+pMaGgw9yFKm0Fxpofhql7wwia6R9vkivmM/uVcx ansibleoss@ansibleoss
+              - ssh-rsa changeme ansibleoss@ansibleoss
             passwd: ${input.password}
             sudo: ['ALL=(ALL) NOPASSWD:ALL']
             groups: [wheel, sudo, admin]
             shell: '/bin/bash'
             lock_passwd:  false
         preserve_hostname:  false
+        chpasswd:
+          list: |
+            ansibleoss:${input.password}
+          expire:  False
         hostname: ${input.hostname}
         runcmd:
           - echo "disable_vmware_customization: false " >> /etc/cloud/cloud.cfg
