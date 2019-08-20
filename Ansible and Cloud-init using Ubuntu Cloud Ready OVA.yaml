@@ -2,10 +2,6 @@ inputs:
   hostname:
     title: Hostname
     type: string
-  sshkey:
-    type: string
-    title: SSHKey
-    encrypted: true
   password:
     type: string
     encrypted: true
@@ -21,21 +17,31 @@ resources:
     networks:
       - name: '${resource.AppNetwork.name}'
     properties:
-      image: Ubuntu 18.04 LTS
+      image: Blog Ubuntu 18.04 LTS
       constraints:
         - tag: 'category:development'
       flavor: generic.tiny
       cloudConfig: |
         #cloud-config
+        password: 'VMware1!'
+        chpasswd: { expire: False }
+        ssh_pwauth: True
         users:
+          - default
           - name: 'ansibleoss'
             ssh_authorized_keys:
-              - ${input.sshkey}
+              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFP8B+AzYQeZk/rwyuFDzyL3uTMrOiFrziO8PyvQV5NgIVSOjvhVNRGDTCf+WxvITy3lC6H7WmXU12y2zoChfCgQD0a9du5mkNVl3MXyaTycmQNbPqrSUWiMkxhNqVDeMeV7V4p2LYD2w5dypbc5fX0yD2B3X8141COeOdhDBA86DB173E6CfGv6KEv3vS7na3aI0qUvtKIo+d8OojfUi6ROHGIe55sDIfNywvNoa10pPMSZEh6Y1K9IUsSTctu65ejLW32/9se+Wru1LVHjCHsakDP6m4XACZRTB7GhHlKkTo+pMaGgw9yFKm0Fxpofhql7wwia6R9vkivmM/uVcx ansibleoss@ansibleoss
             passwd: ${input.password}
             sudo: ['ALL=(ALL) NOPASSWD:ALL']
             groups: [wheel, sudo, admin]
             shell: '/bin/bash'
             lock_passwd:  false
+        preserve_hostname:  false
+        hostname: ${input.hostname}
+        runcmd:
+          - echo "disable_vmware_customization: false " >> /etc/cloud/cloud.cfg
+          - sed -i 's/D \/tmp 1777 root root -/#D \/tmp 1777 root root -/g' /usr/lib/tmpfiles.d/tmp.conf
+        final_message: "The system is ready, after $UPTIME seconds"
       hostname: '${input.hostname}'
       networks:
         - name: '${AppNetwork.name}'
@@ -63,8 +69,8 @@ resources:
           - /home/ansibleoss/playbooks/cas-ansible-demo/playbook/nginx-playbook.yml
       osType: linux
       groups:
-        - GroupName
+        - Blog
       maxConnectionRetries: 10
       host: '${resource.web1.*}'
-      account: dg-ansibleoss
-      privateKeyFile: /home/ansibleoss/ansible_keys/id_centos_cas_rsa
+      account: dg-blog-ansibleoss
+      privateKeyFile: ~/.ssh/id_rsa
